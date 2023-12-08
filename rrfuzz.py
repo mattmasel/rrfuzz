@@ -1,4 +1,5 @@
 import sys
+import time
 import requests
 import os.path
 
@@ -50,6 +51,8 @@ def main():
   # open the file, this is our wordlist
   with open(fname) as fh:
     # read file line by line
+    request_count = 1
+
     for fline in fh:
       # skip line if it starts with a comment
       if fline.startswith("#"):
@@ -64,6 +67,13 @@ def main():
       # Process the response
       if res.find(FAILURE_STRING) == -1:
         print(res)
+
+      if request_count % REQUEST_PER_TIMEFRAME == 0:
+        print(f"[!] Hit maximum number of requests ({REQUEST_PER_TIMEFRAME})")
+        print(f"[-] Restarting in {REQUEST_PAUSE} seconds")
+        time.sleep(REQUEST_PAUSE)
+
+      request_count += 1
 
 if __name__ == "__main__":
   main()
