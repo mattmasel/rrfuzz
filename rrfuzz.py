@@ -4,7 +4,7 @@ import requests
 import os.path
 
 # define target TARGET_URL, change as needed
-TARGET_URL = "http://94.237.48.48:45256/"
+TARGET_URL = "http://<TARGET_URL>"
 
 # define a fake HEADERS to present ourself as Chromium browser, change if needed
 HEADERS = {
